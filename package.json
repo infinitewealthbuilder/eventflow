@@ -16,9 +16,12 @@
   "dependencies": {
     "@clerk/nextjs": "^6.36.5",
     "@prisma/client": "^5.22.0",
+    "@stripe/stripe-js": "^8.6.1",
     "next": "^14.2.25",
     "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react-dom": "18.3.1",
+    "stripe": "^20.1.1",
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@types/node": "20.17.10",

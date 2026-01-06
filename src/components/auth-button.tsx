@@ -1,8 +1,14 @@
 "use client";
 
-import { UserButton } from "@clerk/nextjs";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { isClerkConfigured } from "@/lib/auth";
+
+// Dynamically import UserButton to avoid loading Clerk during static generation
+const UserButton = dynamic(
+  () => import("@clerk/nextjs").then((mod) => mod.UserButton),
+  { ssr: false }
+);
 
 /**
  * Auth button that shows Clerk's UserButton when configured,
