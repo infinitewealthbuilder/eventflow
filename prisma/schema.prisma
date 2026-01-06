@@ -1,0 +1,251 @@
+// EventFlow Database Schema
+// Multi-tenant event cross-posting SaaS
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ===========================================
+// Multi-Tenant Organization
+// ===========================================
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  members             OrganizationMember[]
+  events              Event[]
+  platformCredentials PlatformCredential[]
+  subscription        Subscription?
+
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String   // Clerk user ID
+  role           Role     @default(MEMBER)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@map("organization_members")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+// ===========================================
+// Subscription & Billing
+// ===========================================
+
+model Subscription {
+  id             String           @id @default(cuid())
+  organizationId String           @unique
+  tier           SubscriptionTier @default(FREE)
+  stripeCustomerId    String?     @unique
+  stripeSubscriptionId String?    @unique
+  status         SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+enum SubscriptionTier {
+  FREE       // 2 platforms, 10 events/month
+  BASIC      // 4 platforms, 50 events/month - $9.99
+  PRO        // 7 platforms, 200 events/month - $19.99
+  BUSINESS   // 9 platforms, unlimited - $49.99
+  ENTERPRISE // Custom
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  TRIALING
+}
+
+// ===========================================
+// Events (Core Domain)
+// ===========================================
+
+model Event {
+  id             String      @id @default(cuid())
+  organizationId String
+
+  // Canonical event data
+  title          String
+  description    String      @db.Text
+  startTime      DateTime
+  endTime        DateTime
+  timezone       String      @default("America/Los_Angeles")
+  location       String?
+  isOnline       Boolean     @default(false)
+  onlineUrl      String?
+  coverImageUrl  String?
+
+  // Metadata
+  status         EventStatus @default(DRAFT)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  // Relations
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  publications Publication[]
+
+  @@index([organizationId])
+  @@index([startTime])
+  @@map("events")
+}
+
+enum EventStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  CANCELED
+}
+
+// ===========================================
+// Publications (Cross-Platform Tracking)
+// ===========================================
+
+model Publication {
+  id              String            @id @default(cuid())
+  eventId         String
+  platform        Platform
+
+  // Platform-specific data
+  platformEventId String?           // ID on the external platform
+  platformUrl     String?           // Direct link to published event
+
+  // Status tracking
+  status          PublicationStatus @default(PENDING)
+  scheduledFor    DateTime?
+  publishedAt     DateTime?
+  lastError       String?           @db.Text
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Relations
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, platform])
+  @@index([eventId])
+  @@map("publications")
+}
+
+enum Platform {
+  LOCAL_CALENDAR  // iCal export
+  FACEBOOK_EVENTS
+  LINKEDIN_EVENTS
+  EVENTBRITE
+  MEETUP
+  INSTAGRAM
+  TWITTER
+  DISCORD
+  WHATSAPP
+}
+
+enum PublicationStatus {
+  PENDING
+  SCHEDULED
+  PUBLISHING
+  PUBLISHED
+  FAILED
+  DELETED
+}
+
+// ===========================================
+// Platform Credentials (OAuth Tokens)
+// ===========================================
+
+model PlatformCredential {
+  id             String   @id @default(cuid())
+  organizationId String
+  platform       Platform
+
+  // OAuth data (encrypted at rest by Supabase)
+  accessToken    String   @db.Text
+  refreshToken   String?  @db.Text
+  expiresAt      DateTime?
+
+  // Platform-specific data
+  platformUserId String?  // User ID on the platform
+  platformPageId String?  // For Facebook Pages, LinkedIn Company Pages
+  metadata       Json?    // Additional platform-specific config
+
+  // Status
+  isValid        Boolean  @default(true)
+  lastValidated  DateTime @default(now())
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, platform])
+  @@map("platform_credentials")
+}
+
+// ===========================================
+// Scheduled Jobs (Async Publishing Queue)
+// ===========================================
+
+model ScheduledJob {
+  id            String        @id @default(cuid())
+  type          JobType
+  payload       Json
+  scheduledFor  DateTime
+
+  // Execution tracking
+  status        JobStatus     @default(PENDING)
+  attempts      Int           @default(0)
+  maxAttempts   Int           @default(3)
+  lastError     String?       @db.Text
+  executedAt    DateTime?
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([scheduledFor, status])
+  @@map("scheduled_jobs")
+}
+
+enum JobType {
+  PUBLISH_EVENT
+  REFRESH_TOKEN
+  SYNC_EVENT
+}
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
