@@ -1,10 +1,13 @@
 /**
  * EventFlow - Platform Credentials Service
  * Manages OAuth tokens and platform connections
+ *
+ * All tokens are encrypted at the application level before storage
  */
 
 import { prisma } from '../db';
 import type { Platform, Prisma } from '@prisma/client';
+import { encrypt, decrypt, isEncrypted } from './encryption';
 
 export interface PlatformConnection {
   platform: Platform;
@@ -28,12 +31,13 @@ export interface SaveCredentialsInput {
 
 /**
  * Get credentials for a specific platform
+ * Automatically decrypts tokens before returning
  */
 export async function getCredentials(
   organizationId: string,
   platform: Platform
 ) {
-  return prisma.platformCredential.findUnique({
+  const cred = await prisma.platformCredential.findUnique({
     where: {
       organizationId_platform: {
         organizationId,
@@ -41,6 +45,19 @@ export async function getCredentials(
       },
     },
   });
+
+  if (!cred) return null;
+
+  // Decrypt tokens if they're encrypted
+  return {
+    ...cred,
+    accessToken: isEncrypted(cred.accessToken)
+      ? decrypt(cred.accessToken)
+      : cred.accessToken,
+    refreshToken: cred.refreshToken && isEncrypted(cred.refreshToken)
+      ? decrypt(cred.refreshToken)
+      : cred.refreshToken,
+  };
 }
 
 /**
@@ -66,6 +83,7 @@ export async function getConnectedPlatforms(
 
 /**
  * Save or update platform credentials
+ * Automatically encrypts tokens before storage
  */
 export async function saveCredentials(input: SaveCredentialsInput) {
   const {
@@ -79,6 +97,10 @@ export async function saveCredentials(input: SaveCredentialsInput) {
     metadata,
   } = input;
 
+  // Encrypt tokens before storage
+  const encryptedAccessToken = encrypt(accessToken);
+  const encryptedRefreshToken = refreshToken ? encrypt(refreshToken) : undefined;
+
   return prisma.platformCredential.upsert({
     where: {
       organizationId_platform: {
@@ -89,8 +111,8 @@ export async function saveCredentials(input: SaveCredentialsInput) {
     create: {
       organizationId,
       platform,
-      accessToken,
-      refreshToken,
+      accessToken: encryptedAccessToken,
+      refreshToken: encryptedRefreshToken,
       expiresAt,
       platformUserId,
       platformPageId,
@@ -99,8 +121,8 @@ export async function saveCredentials(input: SaveCredentialsInput) {
       lastValidated: new Date(),
     },
     update: {
-      accessToken,
-      refreshToken,
+      accessToken: encryptedAccessToken,
+      refreshToken: encryptedRefreshToken,
       expiresAt,
       platformUserId,
       platformPageId,

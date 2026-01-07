@@ -52,8 +52,8 @@ export async function GET(request: Request) {
       );
     }
 
-    // Parse and validate state
-    const stateData = parseOAuthState(state);
+    // Parse and validate state (verifies against database, one-time use)
+    const stateData = await parseOAuthState(state);
     if (!stateData) {
       return NextResponse.redirect(
         new URL('/dashboard/settings/connections?error=invalid_state', request.url)
@@ -82,14 +82,14 @@ export async function GET(request: Request) {
     const tokens = await exchangeCodeForTokens(config, code);
 
     // Exchange for long-lived token (60 days instead of 2 hours)
-    const longLivedToken = await exchangeForLongLivedToken(
+    const longLivedTokenResult = await exchangeForLongLivedToken(
       tokens.accessToken,
       config.clientId,
       config.clientSecret
     );
 
     // Get user's Facebook Pages
-    const pages = await getFacebookPages(longLivedToken);
+    const pages = await getFacebookPages(longLivedTokenResult.accessToken);
 
     if (pages.length === 0) {
       return NextResponse.redirect(
@@ -110,8 +110,14 @@ export async function GET(request: Request) {
       );
     }
 
-    // Calculate expiration (long-lived tokens last ~60 days)
-    const expiresAt = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
+    // Calculate expiration from API response, fallback to 60 days
+    const expiresAt = longLivedTokenResult.expiresIn
+      ? new Date(Date.now() + longLivedTokenResult.expiresIn * 1000)
+      : new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
+
+    if (!longLivedTokenResult.expiresIn) {
+      console.warn('Facebook API did not return expires_in, using 60-day fallback');
+    }
 
     // Save credentials
     await saveCredentials({
@@ -123,7 +129,7 @@ export async function GET(request: Request) {
       metadata: {
         accountName: selectedPage.name,
         pageId: selectedPage.id,
-        userAccessToken: longLivedToken, // Keep for potential future use
+        userAccessToken: longLivedTokenResult.accessToken, // Keep for potential future use
       },
     });
 

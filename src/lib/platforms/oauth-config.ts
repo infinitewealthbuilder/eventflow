@@ -3,6 +3,8 @@
  * Platform-specific OAuth settings
  */
 
+import { prisma } from '../db';
+
 export interface OAuthConfig {
   clientId: string;
   clientSecret: string;
@@ -10,6 +12,55 @@ export interface OAuthConfig {
   tokenUrl: string;
   scopes: string[];
   redirectUri: string;
+}
+
+/**
+ * Validate required OAuth environment variables
+ * Call this at startup to fail fast if credentials are missing
+ */
+export function validateOAuthEnvVars(): {
+  facebook: boolean;
+  linkedin: boolean;
+  errors: string[];
+} {
+  const errors: string[] = [];
+  let facebook = true;
+  let linkedin = true;
+
+  // Check Facebook
+  if (!process.env.FACEBOOK_APP_ID) {
+    errors.push('FACEBOOK_APP_ID is not configured');
+    facebook = false;
+  }
+  if (!process.env.FACEBOOK_APP_SECRET) {
+    errors.push('FACEBOOK_APP_SECRET is not configured');
+    facebook = false;
+  }
+
+  // Check LinkedIn
+  if (!process.env.LINKEDIN_CLIENT_ID) {
+    errors.push('LINKEDIN_CLIENT_ID is not configured');
+    linkedin = false;
+  }
+  if (!process.env.LINKEDIN_CLIENT_SECRET) {
+    errors.push('LINKEDIN_CLIENT_SECRET is not configured');
+    linkedin = false;
+  }
+
+  // Check base URL
+  if (!process.env.NEXT_PUBLIC_APP_URL) {
+    errors.push('NEXT_PUBLIC_APP_URL is not configured (required for OAuth callbacks)');
+  }
+
+  return { facebook, linkedin, errors };
+}
+
+/**
+ * Check if a specific platform's OAuth is configured
+ */
+export function isOAuthConfigured(platform: 'facebook' | 'linkedin'): boolean {
+  const validation = validateOAuthEnvVars();
+  return platform === 'facebook' ? validation.facebook : validation.linkedin;
 }
 
 /**
@@ -54,39 +105,95 @@ export function getLinkedInOAuthConfig(): OAuthConfig {
 
 /**
  * Generate OAuth state parameter (CSRF protection)
- * Encodes organizationId and a random token
+ * Creates a random token and stores it in the database for validation
  */
-export function generateOAuthState(organizationId: string): string {
-  const randomToken = crypto.randomUUID();
+export async function generateOAuthState(
+  organizationId: string,
+  platform: 'facebook' | 'linkedin'
+): Promise<string> {
+  const token = crypto.randomUUID();
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+  // Store in database for server-side validation
+  await prisma.oAuthState.create({
+    data: {
+      token,
+      organizationId,
+      platform,
+      expiresAt,
+    },
+  });
+
+  // Return base64url encoded state
   const state = {
+    token,
     organizationId,
-    token: randomToken,
-    timestamp: Date.now(),
   };
   return Buffer.from(JSON.stringify(state)).toString('base64url');
 }
 
 /**
  * Parse and validate OAuth state parameter
- * Returns null if invalid or expired (15 min timeout)
+ * Validates against database record and deletes after use (one-time use)
+ * Returns null if invalid, expired, or already used
  */
-export function parseOAuthState(state: string): { organizationId: string; token: string } | null {
+export async function parseOAuthState(
+  state: string
+): Promise<{ organizationId: string; token: string } | null> {
   try {
     const decoded = JSON.parse(Buffer.from(state, 'base64url').toString());
 
-    // Check expiry (15 minutes)
-    const fifteenMinutes = 15 * 60 * 1000;
-    if (Date.now() - decoded.timestamp > fifteenMinutes) {
+    if (!decoded.token || !decoded.organizationId) {
+      return null;
+    }
+
+    // Find and delete the state record (atomic - prevents replay attacks)
+    const stateRecord = await prisma.oAuthState.findUnique({
+      where: { token: decoded.token },
+    });
+
+    if (!stateRecord) {
+      console.error('OAuth state not found in database - possible CSRF attack');
+      return null;
+    }
+
+    // Delete immediately (one-time use)
+    await prisma.oAuthState.delete({
+      where: { token: decoded.token },
+    });
+
+    // Check expiry
+    if (stateRecord.expiresAt < new Date()) {
+      console.error('OAuth state expired');
+      return null;
+    }
+
+    // Verify organizationId matches
+    if (stateRecord.organizationId !== decoded.organizationId) {
+      console.error('OAuth state organizationId mismatch - possible tampering');
       return null;
     }
 
     return {
-      organizationId: decoded.organizationId,
-      token: decoded.token,
+      organizationId: stateRecord.organizationId,
+      token: stateRecord.token,
     };
-  } catch {
+  } catch (error) {
+    console.error('Failed to parse OAuth state:', error);
     return null;
   }
+}
+
+/**
+ * Clean up expired OAuth states (call periodically)
+ */
+export async function cleanupExpiredOAuthStates(): Promise<number> {
+  const result = await prisma.oAuthState.deleteMany({
+    where: {
+      expiresAt: { lt: new Date() },
+    },
+  });
+  return result.count;
 }
 
 /**

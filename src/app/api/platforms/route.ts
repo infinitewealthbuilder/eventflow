@@ -32,17 +32,19 @@ export async function GET(request: Request) {
       );
     }
 
-    // Verify user has access to this organization
+    // Verify user has admin access to this organization
+    // Only OWNER/ADMIN can view platform connections (contains sensitive OAuth info)
     const membership = await prisma.organizationMember.findFirst({
       where: {
         organizationId,
         userId,
+        role: { in: ['OWNER', 'ADMIN'] },
       },
     });
 
     if (!membership) {
       return NextResponse.json(
-        { error: 'Not authorized to view this organization' },
+        { error: 'Not authorized to manage this organization' },
         { status: 403 }
       );
     }

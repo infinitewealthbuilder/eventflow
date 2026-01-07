@@ -56,9 +56,14 @@ export class FacebookAdapter extends BasePlatformAdapter {
     }
 
     try {
-      // Validate token by fetching page info
+      // Validate token by fetching page info (using Authorization header)
       const response = await fetch(
-        `${FACEBOOK_GRAPH_API_BASE}/${this.credentials.pageId}?fields=id,name&access_token=${this.credentials.accessToken}`
+        `${FACEBOOK_GRAPH_API_BASE}/${this.credentials.pageId}?fields=id,name`,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.credentials.accessToken}`,
+          },
+        }
       );
 
       if (!response.ok) {
@@ -88,9 +93,14 @@ export class FacebookAdapter extends BasePlatformAdapter {
     }
 
     try {
-      // Validate credentials by fetching page info
+      // Validate credentials by fetching page info (using Authorization header)
       const response = await fetch(
-        `${FACEBOOK_GRAPH_API_BASE}/${pageId}?fields=id,name&access_token=${accessToken}`
+        `${FACEBOOK_GRAPH_API_BASE}/${pageId}?fields=id,name`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          },
+        }
       );
 
       if (!response.ok) {
@@ -200,11 +210,9 @@ export class FacebookAdapter extends BasePlatformAdapter {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.credentials.accessToken}`,
           },
-          body: JSON.stringify({
-            ...payload,
-            access_token: this.credentials.accessToken,
-          }),
+          body: JSON.stringify(payload),
         }
       );
 
@@ -270,11 +278,9 @@ export class FacebookAdapter extends BasePlatformAdapter {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.credentials.accessToken}`,
           },
-          body: JSON.stringify({
-            ...payload,
-            access_token: this.credentials.accessToken,
-          }),
+          body: JSON.stringify(payload),
         }
       );
 
@@ -321,9 +327,12 @@ export class FacebookAdapter extends BasePlatformAdapter {
     }
 
     const response = await fetch(
-      `${FACEBOOK_GRAPH_API_BASE}/${externalId}?access_token=${this.credentials.accessToken}`,
+      `${FACEBOOK_GRAPH_API_BASE}/${externalId}`,
       {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${this.credentials.accessToken}`,
+        },
       }
     );
 
@@ -463,7 +472,12 @@ export async function getFacebookPages(
   userAccessToken: string
 ): Promise<FacebookPageResponse[]> {
   const response = await fetch(
-    `${FACEBOOK_GRAPH_API_BASE}/me/accounts?fields=id,name,access_token&access_token=${userAccessToken}`
+    `${FACEBOOK_GRAPH_API_BASE}/me/accounts?fields=id,name,access_token`,
+    {
+      headers: {
+        'Authorization': `Bearer ${userAccessToken}`,
+      },
+    }
   );
 
   if (!response.ok) {
@@ -474,15 +488,24 @@ export async function getFacebookPages(
   return data.data || [];
 }
 
+interface LongLivedTokenResponse {
+  access_token: string;
+  token_type: string;
+  expires_in?: number; // Seconds until expiration
+}
+
 /**
  * Exchange short-lived token for long-lived token
  * Required for maintaining connection without re-auth
+ * Returns token and optional expiration in seconds
  */
 export async function exchangeForLongLivedToken(
   shortLivedToken: string,
   appId: string,
   appSecret: string
-): Promise<string> {
+): Promise<{ accessToken: string; expiresIn?: number }> {
+  // Note: This OAuth endpoint requires query params per Facebook docs
+  // The client_secret is intentionally in the URL for this specific endpoint
   const response = await fetch(
     `${FACEBOOK_GRAPH_API_BASE}/oauth/access_token?` +
       `grant_type=fb_exchange_token&` +
@@ -492,9 +515,13 @@ export async function exchangeForLongLivedToken(
   );
 
   if (!response.ok) {
-    throw new Error('Failed to exchange Facebook token');
+    const error = await response.json();
+    throw new Error(error.error?.message || 'Failed to exchange Facebook token');
   }
 
-  const data = await response.json();
-  return data.access_token;
+  const data = (await response.json()) as LongLivedTokenResponse;
+  return {
+    accessToken: data.access_token,
+    expiresIn: data.expires_in,
+  };
 }

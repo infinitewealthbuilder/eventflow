@@ -49,8 +49,8 @@ export async function GET(request: Request) {
       );
     }
 
-    // Parse and validate state
-    const stateData = parseOAuthState(state);
+    // Parse and validate state (verifies against database, one-time use)
+    const stateData = await parseOAuthState(state);
     if (!stateData) {
       return NextResponse.redirect(
         new URL('/dashboard/settings/connections?error=invalid_state', request.url)
@@ -91,10 +91,14 @@ export async function GET(request: Request) {
     // (could add organization selection UI later)
     const selectedOrg = organizations[0];
 
-    // Calculate expiration (LinkedIn tokens last 60 days by default)
+    // Calculate expiration from API response, fallback to 60 days
     const expiresAt = tokens.expiresIn
       ? new Date(Date.now() + tokens.expiresIn * 1000)
       : new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
+
+    if (!tokens.expiresIn) {
+      console.warn('LinkedIn API did not return expires_in, using 60-day fallback');
+    }
 
     // Save credentials
     await saveCredentials({

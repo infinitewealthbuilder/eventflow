@@ -249,3 +249,20 @@ enum JobStatus {
   COMPLETED
   FAILED
 }
+
+// ===========================================
+// OAuth State (CSRF Protection)
+// ===========================================
+
+model OAuthState {
+  id             String   @id @default(cuid())
+  token          String   @unique // Random token for CSRF validation
+  organizationId String
+  platform       String   // 'facebook' or 'linkedin'
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+
+  @@index([token])
+  @@index([expiresAt])
+  @@map("oauth_states")
+}

@@ -58,8 +58,8 @@ export async function GET(request: Request) {
       );
     }
 
-    // Generate state parameter for CSRF protection
-    const state = generateOAuthState(organizationId);
+    // Generate state parameter for CSRF protection (stored in database)
+    const state = await generateOAuthState(organizationId, 'linkedin');
 
     // Build authorization URL and redirect
     const authUrl = buildAuthorizationUrl(config, state);
