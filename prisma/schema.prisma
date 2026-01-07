@@ -169,6 +169,8 @@ enum Platform {
   TWITTER
   DISCORD
   WHATSAPP
+  ZOOM_MEETING    // Zoom Meetings
+  ZOOM_WEBINAR    // Zoom Webinars (requires Webinar license)
 }
 
 enum PublicationStatus {

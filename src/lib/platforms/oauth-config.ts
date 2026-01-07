@@ -21,11 +21,13 @@ export interface OAuthConfig {
 export function validateOAuthEnvVars(): {
   facebook: boolean;
   linkedin: boolean;
+  zoom: boolean;
   errors: string[];
 } {
   const errors: string[] = [];
   let facebook = true;
   let linkedin = true;
+  let zoom = true;
 
   // Check Facebook
   if (!process.env.FACEBOOK_APP_ID) {
@@ -47,20 +49,39 @@ export function validateOAuthEnvVars(): {
     linkedin = false;
   }
 
+  // Check Zoom
+  if (!process.env.ZOOM_CLIENT_ID) {
+    errors.push('ZOOM_CLIENT_ID is not configured');
+    zoom = false;
+  }
+  if (!process.env.ZOOM_CLIENT_SECRET) {
+    errors.push('ZOOM_CLIENT_SECRET is not configured');
+    zoom = false;
+  }
+
   // Check base URL
   if (!process.env.NEXT_PUBLIC_APP_URL) {
     errors.push('NEXT_PUBLIC_APP_URL is not configured (required for OAuth callbacks)');
   }
 
-  return { facebook, linkedin, errors };
+  return { facebook, linkedin, zoom, errors };
 }
 
 /**
  * Check if a specific platform's OAuth is configured
  */
-export function isOAuthConfigured(platform: 'facebook' | 'linkedin'): boolean {
+export function isOAuthConfigured(platform: 'facebook' | 'linkedin' | 'zoom'): boolean {
   const validation = validateOAuthEnvVars();
-  return platform === 'facebook' ? validation.facebook : validation.linkedin;
+  switch (platform) {
+    case 'facebook':
+      return validation.facebook;
+    case 'linkedin':
+      return validation.linkedin;
+    case 'zoom':
+      return validation.zoom;
+    default:
+      return false;
+  }
 }
 
 /**
@@ -104,12 +125,33 @@ export function getLinkedInOAuthConfig(): OAuthConfig {
 }
 
 /**
+ * Get Zoom OAuth configuration
+ * Supports both Meetings and Webinars
+ */
+export function getZoomOAuthConfig(): OAuthConfig {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+  return {
+    clientId: process.env.ZOOM_CLIENT_ID || '',
+    clientSecret: process.env.ZOOM_CLIENT_SECRET || '',
+    authorizeUrl: 'https://zoom.us/oauth/authorize',
+    tokenUrl: 'https://zoom.us/oauth/token',
+    scopes: [
+      'meeting:write',
+      'webinar:write',
+      'user:read',
+    ],
+    redirectUri: `${baseUrl}/api/oauth/zoom/callback`,
+  };
+}
+
+/**
  * Generate OAuth state parameter (CSRF protection)
  * Creates a random token and stores it in the database for validation
  */
 export async function generateOAuthState(
   organizationId: string,
-  platform: 'facebook' | 'linkedin'
+  platform: 'facebook' | 'linkedin' | 'zoom'
 ): Promise<string> {
   const token = crypto.randomUUID();
   const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
@@ -244,6 +286,91 @@ export async function exchangeCodeForTokens(
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`Token exchange failed: ${error}`);
+  }
+
+  const data = await response.json();
+
+  return {
+    accessToken: data.access_token,
+    refreshToken: data.refresh_token,
+    expiresIn: data.expires_in,
+  };
+}
+
+/**
+ * Exchange authorization code for tokens (Zoom-specific)
+ * Zoom requires Basic Auth with base64(client_id:client_secret)
+ */
+export async function exchangeZoomCodeForTokens(
+  config: OAuthConfig,
+  code: string
+): Promise<{
+  accessToken: string;
+  refreshToken?: string;
+  expiresIn?: number;
+}> {
+  const credentials = Buffer.from(`${config.clientId}:${config.clientSecret}`).toString('base64');
+
+  const params = new URLSearchParams({
+    code,
+    redirect_uri: config.redirectUri,
+    grant_type: 'authorization_code',
+  });
+
+  const response = await fetch(config.tokenUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': `Basic ${credentials}`,
+    },
+    body: params.toString(),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Zoom token exchange failed: ${error}`);
+  }
+
+  const data = await response.json();
+
+  return {
+    accessToken: data.access_token,
+    refreshToken: data.refresh_token,
+    expiresIn: data.expires_in,
+  };
+}
+
+/**
+ * Refresh Zoom access token
+ * Zoom tokens expire in 1 hour
+ */
+export async function refreshZoomToken(
+  refreshToken: string
+): Promise<{
+  accessToken: string;
+  refreshToken?: string;
+  expiresIn?: number;
+}> {
+  const config = getZoomOAuthConfig();
+  const credentials = Buffer.from(`${config.clientId}:${config.clientSecret}`).toString('base64');
+
+  const params = new URLSearchParams({
+    refresh_token: refreshToken,
+    grant_type: 'refresh_token',
+  });
+
+  const response = await fetch(config.tokenUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': `Basic ${credentials}`,
+    },
+    body: params.toString(),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Zoom token refresh failed: ${error}`);
   }
 
   const data = await response.json();

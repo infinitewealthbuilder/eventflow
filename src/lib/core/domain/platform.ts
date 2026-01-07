@@ -12,6 +12,8 @@ export type PlatformId =
   | 'twitter'
   | 'discord'
   | 'whatsapp'
+  | 'zoom-meeting'
+  | 'zoom-webinar'
   | 'local-calendar';
 
 export type AuthType = 'oauth2' | 'api-key' | 'webhook' | 'none';
@@ -232,6 +234,54 @@ export const PLATFORMS: Record<PlatformId, PlatformMetadata> = {
       maxImages: 1,
     },
     apiDocsUrl: 'https://developers.facebook.com/docs/whatsapp/business-management-api/',
+  },
+
+  'zoom-meeting': {
+    id: 'zoom-meeting',
+    name: 'zoom-meeting',
+    displayName: 'Zoom Meeting',
+    icon: 'video',
+    color: '#2D8CFF',
+    authType: 'oauth2',
+    requiredTier: 'basic',
+    capabilities: {
+      supportsImages: false,
+      supportsVideo: false,
+      supportsRSVP: true,
+      supportsTicketing: false,
+      supportsRecurring: true,
+      supportsLocation: false,
+      supportsVirtual: true,
+      maxDescriptionLength: 2000,
+      maxTitleLength: 200,
+      maxImages: 0,
+    },
+    oauthScopes: ['meeting:write', 'user:read'],
+    apiDocsUrl: 'https://developers.zoom.us/docs/api/',
+  },
+
+  'zoom-webinar': {
+    id: 'zoom-webinar',
+    name: 'zoom-webinar',
+    displayName: 'Zoom Webinar',
+    icon: 'presentation',
+    color: '#2D8CFF',
+    authType: 'oauth2',
+    requiredTier: 'pro',
+    capabilities: {
+      supportsImages: false,
+      supportsVideo: false,
+      supportsRSVP: true,
+      supportsTicketing: false,
+      supportsRecurring: true,
+      supportsLocation: false,
+      supportsVirtual: true,
+      maxDescriptionLength: 2000,
+      maxTitleLength: 200,
+      maxImages: 0,
+    },
+    oauthScopes: ['webinar:write', 'user:read'],
+    apiDocsUrl: 'https://developers.zoom.us/docs/api/',
   },
 
   'local-calendar': {
