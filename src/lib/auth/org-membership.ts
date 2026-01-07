@@ -1,8 +1,12 @@
 /**
  * EventFlow - Organization Membership Utilities
  * Shared authorization logic for API routes
+ *
+ * NOTE: This module is server-only. Import directly from
+ * "@/lib/auth/org-membership" in server components/routes.
  */
 
+import "server-only";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
 import type { OrganizationMember } from "@prisma/client";
