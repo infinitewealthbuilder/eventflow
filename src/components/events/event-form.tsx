@@ -158,7 +158,7 @@ export function EventForm({
           maxLength={200}
           value={formData.title}
           onChange={handleChange}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[#D9B01C] focus:outline-none focus:ring-1 focus:ring-[#D9B01C]"
           placeholder="e.g., Annual Client Appreciation Dinner"
         />
       </div>
@@ -178,7 +178,7 @@ export function EventForm({
           rows={4}
           value={formData.description}
           onChange={handleChange}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[#D9B01C] focus:outline-none focus:ring-1 focus:ring-[#D9B01C]"
           placeholder="Describe your event..."
         />
       </div>
@@ -199,7 +199,7 @@ export function EventForm({
             required
             value={formData.startTime}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[#D9B01C] focus:outline-none focus:ring-1 focus:ring-[#D9B01C]"
           />
         </div>
         <div>
@@ -217,7 +217,7 @@ export function EventForm({
             value={formData.endTime}
             onChange={handleChange}
             min={formData.startTime}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[#D9B01C] focus:outline-none focus:ring-1 focus:ring-[#D9B01C]"
           />
         </div>
       </div>
@@ -235,7 +235,7 @@ export function EventForm({
           name="timezone"
           value={formData.timezone}
           onChange={handleChange}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[#D9B01C] focus:outline-none focus:ring-1 focus:ring-[#D9B01C]"
         >
           {TIMEZONES.map((tz) => (
             <option key={tz.value} value={tz.value}>
@@ -253,7 +253,7 @@ export function EventForm({
           name="isOnline"
           checked={formData.isOnline}
           onChange={handleChange}
-          className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+          className="h-4 w-4 rounded border-gray-300 text-[#D9B01C] focus:ring-[#D9B01C]"
         />
         <label htmlFor="isOnline" className="ml-2 text-sm text-gray-700">
           This is an online/virtual event
@@ -275,7 +275,7 @@ export function EventForm({
             name="onlineUrl"
             value={formData.onlineUrl}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[#D9B01C] focus:outline-none focus:ring-1 focus:ring-[#D9B01C]"
             placeholder="https://zoom.us/j/..."
           />
         </div>
@@ -293,7 +293,7 @@ export function EventForm({
             name="location"
             value={formData.location}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[#D9B01C] focus:outline-none focus:ring-1 focus:ring-[#D9B01C]"
             placeholder="123 Main St, City, State"
           />
         </div>
@@ -313,7 +313,7 @@ export function EventForm({
           name="coverImageUrl"
           value={formData.coverImageUrl}
           onChange={handleChange}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[#D9B01C] focus:outline-none focus:ring-1 focus:ring-[#D9B01C]"
           placeholder="https://example.com/image.jpg"
         />
         <p className="mt-1 text-xs text-gray-500">
@@ -326,14 +326,14 @@ export function EventForm({
         <button
           type="button"
           onClick={() => router.back()}
-          className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#D9B01C] focus:ring-offset-2"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isSubmitting}
-          className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex items-center rounded-md bg-[#D9B01C] px-4 py-2 text-sm font-semibold text-[#090909] shadow-sm hover:bg-[#C49F18] focus:outline-none focus:ring-2 focus:ring-[#D9B01C] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isSubmitting ? (
             <>

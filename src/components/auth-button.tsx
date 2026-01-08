@@ -19,7 +19,7 @@ export function AuthButton() {
     return (
       <Link
         href="/sign-in"
-        className="rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+        className="rounded-md bg-[#F5E6A3] px-3 py-2 text-sm font-medium text-[#090909] hover:bg-[#D9B01C]"
       >
         Sign In (Auth Disabled)
       </Link>

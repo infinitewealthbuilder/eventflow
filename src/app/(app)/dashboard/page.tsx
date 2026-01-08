@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { AuthButton } from "@/components/auth-button";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
 
 export const dynamic = "force-dynamic";
 
@@ -91,19 +92,11 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <h1 className="text-2xl font-bold text-gray-900">EventFlow</h1>
-          <div className="flex items-center gap-4">
-            <AuthButton />
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Header variant="dashboard" />
 
       {/* Main Content */}
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Organization Selector (if multiple) */}
         {organizations.length > 1 && (
           <div className="mb-6">
@@ -121,7 +114,7 @@ export default function DashboardPage() {
                 localStorage.setItem("selectedOrganizationId", e.target.value);
                 window.location.reload();
               }}
-              className="mt-1 block w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="mt-1 block w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[#D9B01C] focus:outline-none focus:ring-1 focus:ring-[#D9B01C]"
             >
               {organizations.map((org) => (
                 <option key={org.id} value={org.id}>
@@ -150,7 +143,7 @@ export default function DashboardPage() {
               </h2>
               <Link
                 href="/dashboard/events"
-                className="text-sm text-indigo-600 hover:text-indigo-500"
+                className="text-sm text-[#D9B01C] hover:text-[#C49F18]"
               >
                 View all →
               </Link>
@@ -158,7 +151,7 @@ export default function DashboardPage() {
 
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#D9B01C] border-t-transparent" />
               </div>
             ) : upcomingEvents.length === 0 ? (
               <div className="mt-4 rounded-lg border-2 border-dashed border-gray-200 p-6 text-center">
@@ -178,7 +171,7 @@ export default function DashboardPage() {
                 <p className="mt-2 text-sm text-gray-500">No upcoming events</p>
                 <Link
                   href="/dashboard/events/new"
-                  className="mt-3 inline-flex items-center text-sm text-indigo-600 hover:text-indigo-500"
+                  className="mt-3 inline-flex items-center text-sm text-[#D9B01C] hover:text-[#C49F18]"
                 >
                   <svg
                     className="mr-1 h-4 w-4"
@@ -196,7 +189,7 @@ export default function DashboardPage() {
                   <Link
                     key={event.id}
                     href={`/dashboard/events/${event.id}`}
-                    className="block rounded-lg border p-3 hover:border-indigo-200 hover:bg-indigo-50/50 transition-colors"
+                    className="block rounded-lg border p-3 hover:border-[#F5E6A3] hover:bg-[#F5E6A3]/20 transition-colors"
                   >
                     <div className="flex items-center justify-between">
                       <p className="font-medium text-gray-900">{event.title}</p>
@@ -231,11 +224,11 @@ export default function DashboardPage() {
               <div className="mt-4 space-y-3">
                 <Link
                   href="/dashboard/events/new"
-                  className="flex items-center gap-3 rounded-lg border p-4 hover:border-indigo-200 hover:bg-indigo-50/50 transition-colors"
+                  className="flex items-center gap-3 rounded-lg border p-4 hover:border-[#F5E6A3] hover:bg-[#F5E6A3]/20 transition-colors"
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#F5E6A3]">
                     <svg
-                      className="h-5 w-5 text-indigo-600"
+                      className="h-5 w-5 text-[#D9B01C]"
                       viewBox="0 0 20 20"
                       fill="currentColor"
                     >
@@ -251,7 +244,7 @@ export default function DashboardPage() {
                 </Link>
                 <Link
                   href="/dashboard/events"
-                  className="flex items-center gap-3 rounded-lg border p-4 hover:border-indigo-200 hover:bg-indigo-50/50 transition-colors"
+                  className="flex items-center gap-3 rounded-lg border p-4 hover:border-[#F5E6A3] hover:bg-[#F5E6A3]/20 transition-colors"
                 >
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100">
                     <svg
@@ -307,6 +300,8 @@ export default function DashboardPage() {
           </div>
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 }
@@ -354,7 +349,7 @@ function PlatformCard({
           Connected
         </span>
       ) : (
-        <button className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200">
+        <button type="button" className="rounded-md bg-[#F5E6A3] px-2.5 py-1 text-xs font-medium text-[#090909] hover:bg-[#D9B01C]">
           Connect
         </button>
       )}
