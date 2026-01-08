@@ -156,6 +156,7 @@ export function EventForm({
           name="title"
           required
           maxLength={200}
+          autoComplete="off"
           value={formData.title}
           onChange={handleChange}
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[#D9B01C] focus:outline-none focus:ring-1 focus:ring-[#D9B01C]"
@@ -273,6 +274,7 @@ export function EventForm({
             type="url"
             id="onlineUrl"
             name="onlineUrl"
+            autoComplete="url"
             value={formData.onlineUrl}
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[#D9B01C] focus:outline-none focus:ring-1 focus:ring-[#D9B01C]"
@@ -291,6 +293,7 @@ export function EventForm({
             type="text"
             id="location"
             name="location"
+            autoComplete="street-address"
             value={formData.location}
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[#D9B01C] focus:outline-none focus:ring-1 focus:ring-[#D9B01C]"
@@ -311,6 +314,7 @@ export function EventForm({
           type="url"
           id="coverImageUrl"
           name="coverImageUrl"
+          autoComplete="url"
           value={formData.coverImageUrl}
           onChange={handleChange}
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[#D9B01C] focus:outline-none focus:ring-1 focus:ring-[#D9B01C]"

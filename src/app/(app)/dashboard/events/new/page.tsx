@@ -91,7 +91,7 @@ export default function NewEventPage() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#D9B01C] border-t-transparent" />
       </div>
     );
   }
@@ -153,9 +153,10 @@ export default function NewEventPage() {
                 <input
                   type="text"
                   id="orgName"
+                  autoComplete="organization"
                   value={newOrgName}
                   onChange={handleNameChange}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[#D9B01C] focus:outline-none focus:ring-1 focus:ring-[#D9B01C]"
                   placeholder="My Company"
                   required
                 />
@@ -170,9 +171,10 @@ export default function NewEventPage() {
                 <input
                   type="text"
                   id="orgSlug"
+                  autoComplete="off"
                   value={newOrgSlug}
                   onChange={(e) => setNewOrgSlug(e.target.value)}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[#D9B01C] focus:outline-none focus:ring-1 focus:ring-[#D9B01C]"
                   placeholder="my-company"
                   pattern="^[a-z0-9-]+$"
                   required
@@ -184,7 +186,7 @@ export default function NewEventPage() {
               <button
                 type="submit"
                 disabled={isCreatingOrg}
-                className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50"
+                className="inline-flex items-center rounded-md bg-[#D9B01C] px-4 py-2 text-sm font-semibold text-[#090909] shadow-sm hover:bg-[#C49F18] disabled:opacity-50"
               >
                 {isCreatingOrg ? "Creating..." : "Create Organization"}
               </button>
@@ -211,7 +213,7 @@ export default function NewEventPage() {
                       e.target.value
                     );
                   }}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[#D9B01C] focus:outline-none focus:ring-1 focus:ring-[#D9B01C]"
                 >
                   {organizations.map((org) => (
                     <option key={org.id} value={org.id}>
