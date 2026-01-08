@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { brand } from '@/lib/branding';
 import { ExternalLinkIcon, EmailIcon, LinkedInIcon } from '@/components/icons';
 
@@ -19,9 +20,9 @@ const platforms: NavLink[] = [
 ];
 
 const resources: NavLink[] = [
-  { name: 'Documentation', href: '/docs', external: false },
-  { name: 'API Reference', href: '/docs/api', external: false },
-  { name: 'Support', href: 'mailto:support@eventflow.app', external: false },
+  { name: 'Vibe Coding Academy', href: 'https://matthewdnye.com/vibe-coding', external: true },
+  { name: 'Elite Advisor Tools', href: 'https://eliteadvisortools.com', external: true },
+  { name: 'WealthRank SEO', href: 'https://matthewdnye.com/wealthrank-seo', external: true },
 ];
 
 export function Footer() {
@@ -29,7 +30,7 @@ export function Footer() {
 
   return (
     <footer
-      className="border-t border-gray-800"
+      className="border-t border-gray-200"
       style={{ backgroundColor: brand.colors.secondary }}
       role="contentinfo"
     >
@@ -39,13 +40,22 @@ export function Footer() {
           {/* Brand Column */}
           <div className="md:col-span-2">
             <Link href="/" className="inline-flex items-center gap-3">
-              <span
-                className="text-xl font-bold"
-                style={{ color: brand.colors.primary }}
-              >
-                {brand.name}
-              </span>
+              <Image
+                src={brand.logoLight}
+                alt={`${brand.name} logo`}
+                width={200}
+                height={50}
+                className="h-12 w-auto object-contain"
+              />
             </Link>
+            <div className="mt-3">
+              <div className="text-sm font-semibold text-white">
+                {brand.productName}
+              </div>
+              <div className="text-xs text-gray-400">
+                by {brand.name}
+              </div>
+            </div>
             <p className="mt-4 max-w-md text-sm text-gray-400">
               Create events once and cross-post them to Facebook, LinkedIn,
               Eventbrite, Zoom, and more with a single click. Stop copying
@@ -69,7 +79,10 @@ export function Footer() {
                 <li key={item.name}>
                   <Link
                     href={item.href}
-                    className="text-sm text-gray-400 transition-colors hover:text-[#D9B01C]"
+                    className="text-sm text-gray-400 transition-colors"
+                    style={{ ['--hover-color' as string]: brand.colors.primary }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = brand.colors.primary)}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = '')}
                   >
                     {item.name}
                   </Link>
@@ -86,15 +99,33 @@ export function Footer() {
             <ul className="mt-4 space-y-2" role="list" aria-labelledby="footer-resources">
               {resources.map((item) => (
                 <li key={item.name}>
-                  <Link
+                  <a
                     href={item.href}
-                    className="inline-flex items-center gap-1 text-sm text-gray-400 transition-colors hover:text-[#D9B01C]"
+                    target={item.external ? '_blank' : undefined}
+                    rel={item.external ? 'noopener noreferrer' : undefined}
+                    className="inline-flex items-center gap-1 text-sm text-gray-400 transition-colors"
+                    onMouseEnter={(e) => (e.currentTarget.style.color = brand.colors.primary)}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = '')}
                   >
                     {item.name}
                     {item.external && <ExternalLinkIcon />}
-                  </Link>
+                  </a>
                 </li>
               ))}
+              <li className="pt-2">
+                <a
+                  href={brand.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-sm font-medium transition-colors"
+                  style={{ color: brand.colors.primary }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = brand.colors.primaryHover)}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = brand.colors.primary)}
+                >
+                  Visit {brand.name}
+                  <ExternalLinkIcon />
+                </a>
+              </li>
             </ul>
           </div>
         </div>
@@ -119,15 +150,15 @@ export function Footer() {
                   <LinkedInIcon />
                 </a>
               )}
-              {brand.contact.email && (
-                <a
-                  href={`mailto:${brand.contact.email}`}
-                  className="text-gray-500 transition-colors hover:text-[#D9B01C]"
-                  aria-label="Send email"
-                >
-                  <EmailIcon />
-                </a>
-              )}
+              <a
+                href={`mailto:${brand.contact.email}`}
+                className="text-gray-500 transition-colors"
+                aria-label="Send email"
+                onMouseEnter={(e) => (e.currentTarget.style.color = brand.colors.primary)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '')}
+              >
+                <EmailIcon />
+              </a>
             </nav>
           </div>
         </div>

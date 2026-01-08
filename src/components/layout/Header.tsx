@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { brand } from '@/lib/branding';
 import { AuthButton } from '@/components/auth-button';
 
@@ -16,18 +17,20 @@ export function Header({ variant = 'default', showAuth = true }: HeaderProps) {
       style={{ backgroundColor: brand.colors.secondary }}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-20 items-center justify-between">
           {/* Logo */}
           <Link
             href="/"
             className="flex items-center rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D9B01C] focus-visible:ring-offset-2 focus-visible:ring-offset-[#090909]"
           >
-            <span
-              className="text-xl font-bold"
-              style={{ color: brand.colors.primary }}
-            >
-              {brand.name}
-            </span>
+            <Image
+              src={brand.logo}
+              alt={`${brand.name} logo`}
+              width={160}
+              height={40}
+              className="h-10 w-auto object-contain"
+              priority
+            />
           </Link>
 
           {/* Navigation - Only show on default variant */}
