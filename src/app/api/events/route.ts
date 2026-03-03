@@ -1,7 +1,15 @@
+/**
+ * Event API - Create and List Events
+ *
+ * GET /api/events?organizationId=xxx - List events for organization
+ * POST /api/events - Create new event
+ */
+
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
+import { canCreateEvent } from "@/lib/stripe/subscription-service";
 
 // Validation schema for creating events
 const createEventSchema = z.object({
@@ -108,6 +116,15 @@ export async function POST(req: Request) {
 
     if (!member) {
       return NextResponse.json({ error: "Not a member" }, { status: 403 });
+    }
+
+    // Check subscription limits
+    const canCreate = await canCreateEvent(organizationId);
+    if (!canCreate) {
+      return NextResponse.json(
+        { error: "Event limit reached for your subscription tier" },
+        { status: 403 }
+      );
     }
 
     // Create the event
