@@ -2,7 +2,7 @@
 
 /**
  * Platform Connections Page
- * Manage OAuth connections to Facebook, LinkedIn, and other platforms
+ * Manage OAuth connections to Facebook, LinkedIn, Zoom and other platforms
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -51,7 +51,20 @@ export default function ConnectionsPage() {
     }
 
     if (successParam) {
-      const platformName = successParam === 'facebook' ? 'Facebook' : 'LinkedIn';
+      let platformName;
+      switch(successParam) {
+        case 'facebook':
+          platformName = 'Facebook';
+          break;
+        case 'linkedin':
+          platformName = 'LinkedIn';
+          break;
+        case 'zoom':
+          platformName = 'Zoom';
+          break;
+        default:
+          platformName = successParam.charAt(0).toUpperCase() + successParam.slice(1);
+      }
       const accountName = pageParam || orgParam;
       setSuccessMessage(
         `Successfully connected ${platformName}${accountName ? ` (${accountName})` : ''}`
@@ -107,8 +120,10 @@ export default function ConnectionsPage() {
     }
 
     try {
+      // Fix for Zoom IDs - replace hyphens with underscores before uppercasing
+      const formattedPlatformId = platformId.replace('-', '_').toUpperCase();
       const response = await fetch(
-        `/api/platforms?organizationId=${organization.id}&platform=${platformId.toUpperCase()}_EVENTS`,
+        `/api/platforms?organizationId=${organization.id}&platform=${formattedPlatformId}_EVENTS`,
         { method: 'DELETE' }
       );
 
@@ -122,7 +137,7 @@ export default function ConnectionsPage() {
   };
 
   // Get the OAuth-enabled platforms
-  const oauthPlatforms = ['facebook', 'linkedin'];
+  const oauthPlatforms = ['facebook', 'linkedin', 'zoom'];
 
   // Sort platforms - connected first, then OAuth-enabled
   const sortedPlatforms = [...platforms].sort((a, b) => {
@@ -349,6 +364,9 @@ export default function ConnectionsPage() {
           </li>
           <li>
             • <strong>LinkedIn:</strong> You need admin access to a LinkedIn Organization Page.
+          </li>
+          <li>
+            • <strong>Zoom:</strong> You need admin access to your Zoom account to connect.
           </li>
           <li>
             • Events will be posted to the connected Page/Organization automatically.
