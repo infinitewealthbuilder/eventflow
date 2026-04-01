@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { getAuth } from "@/lib/auth-kit/server";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 
 // GET /api/organizations - List user's organizations
 export async function GET() {
   try {
-    const { userId } = await auth();
+    const auth = await getAuth();
+    const userId = auth?.userId;
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -49,7 +50,8 @@ const createOrgSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    const { userId } = await auth();
+    const auth = await getAuth();
+    const userId = auth?.userId;
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

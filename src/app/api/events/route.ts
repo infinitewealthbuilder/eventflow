@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { getAuth } from "@/lib/auth-kit/server";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 
@@ -20,7 +20,8 @@ const createEventSchema = z.object({
 // GET /api/events - List events for organization
 export async function GET(req: Request) {
   try {
-    const { userId } = await auth();
+    const authResult = await getAuth();
+    const userId = authResult?.userId;
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -78,7 +79,8 @@ export async function GET(req: Request) {
 // POST /api/events - Create new event
 export async function POST(req: Request) {
   try {
-    const { userId } = await auth();
+    const authResult = await getAuth();
+    const userId = authResult?.userId;
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

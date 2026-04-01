@@ -1,34 +1,17 @@
-import { NextResponse, NextRequest } from "next/server";
+import { createAuthMiddleware } from "@/lib/auth-kit/middleware";
 
-// Check if Clerk is configured at build/startup time
-const isClerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
-
-// Middleware function
-export default async function middleware(request: NextRequest) {
-  // If Clerk is not configured, allow all requests
-  if (!isClerkConfigured) {
-    return NextResponse.next();
-  }
-
-  // Dynamically import Clerk middleware only when needed
-  const { clerkMiddleware, createRouteMatcher } = await import("@clerk/nextjs/server");
-
-  const isPublicRoute = createRouteMatcher([
+export default createAuthMiddleware({
+  publicRoutes: [
     "/",
     "/sign-in(.*)",
     "/sign-up(.*)",
+    "/forgot-password",
+    "/reset-password",
     "/api/webhooks(.*)",
-  ]);
-
-  // Create and run Clerk middleware
-  const middleware = clerkMiddleware(async (auth, req) => {
-    if (!isPublicRoute(req)) {
-      await auth.protect();
-    }
-  });
-
-  return middleware(request, {} as never);
-}
+    "/api/auth/callback",
+  ],
+  signInUrl: "/sign-in",
+});
 
 export const config = {
   matcher: [

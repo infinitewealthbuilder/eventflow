@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/lib/auth-kit/client";
 
 interface Organization {
   id: string;
@@ -18,14 +18,14 @@ interface UseOrganizationReturn {
 }
 
 export function useOrganization(): UseOrganizationReturn {
-  const { user, isLoaded } = useUser();
+  const { isLoaded, isSignedIn } = useAuth();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isLoaded || !user) {
+    if (!isLoaded || !isSignedIn) {
       setIsLoading(false);
       return;
     }
@@ -41,7 +41,6 @@ export function useOrganization(): UseOrganizationReturn {
 
         // Auto-select first organization if none selected
         if (data.organizations?.length > 0 && !selectedOrgId) {
-          // Check localStorage for previously selected org
           const savedOrgId = localStorage.getItem("selectedOrganizationId");
           const validOrg = data.organizations.find(
             (org: Organization) => org.id === savedOrgId
@@ -56,7 +55,7 @@ export function useOrganization(): UseOrganizationReturn {
     }
 
     fetchOrganizations();
-  }, [isLoaded, user, selectedOrgId]);
+  }, [isLoaded, isSignedIn, selectedOrgId]);
 
   function selectOrganization(orgId: string) {
     setSelectedOrgId(orgId);

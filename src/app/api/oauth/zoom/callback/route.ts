@@ -6,7 +6,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { getAuth } from '@/lib/auth-kit/server';
 import { prisma } from '@/lib/db';
 import {
   getZoomOAuthConfig,
@@ -42,7 +42,8 @@ async function getZoomUser(accessToken: string): Promise<{
 
 export async function GET(request: Request) {
   try {
-    const { userId } = await auth();
+    const authResult = await getAuth();
+    const userId = authResult?.userId;
 
     if (!userId) {
       return NextResponse.redirect(

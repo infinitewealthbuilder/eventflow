@@ -7,7 +7,7 @@
  */
 
 import "server-only";
-import { auth } from "@clerk/nextjs/server";
+import { getAuth } from "@/lib/auth-kit/server";
 import { prisma } from "@/lib/db";
 import type { OrganizationMember } from "@prisma/client";
 
@@ -31,9 +31,9 @@ export async function verifyOrgMembership(
   organizationId: string,
   requiredRoles?: MemberRole[]
 ): Promise<AuthResult | AuthError> {
-  const { userId } = await auth();
+  const auth = await getAuth();
 
-  if (!userId) {
+  if (!auth) {
     return { error: "Unauthorized", status: 401 };
   }
 
@@ -41,7 +41,7 @@ export async function verifyOrgMembership(
     where: {
       organizationId_userId: {
         organizationId,
-        userId,
+        userId: auth.userId,
       },
     },
   });
@@ -50,14 +50,13 @@ export async function verifyOrgMembership(
     return { error: "Not a member of this organization", status: 403 };
   }
 
-  // If specific roles are required, check membership role
   if (requiredRoles && requiredRoles.length > 0) {
     if (!requiredRoles.includes(member.role as MemberRole)) {
       return { error: "Insufficient permissions", status: 403 };
     }
   }
 
-  return { userId, member };
+  return { userId: auth.userId, member };
 }
 
 /**
@@ -68,9 +67,9 @@ export async function verifyEventAccess(
   eventId: string,
   requiredRoles?: MemberRole[]
 ): Promise<(AuthResult & { event: { organizationId: string } }) | AuthError> {
-  const { userId } = await auth();
+  const auth = await getAuth();
 
-  if (!userId) {
+  if (!auth) {
     return { error: "Unauthorized", status: 401 };
   }
 
@@ -80,7 +79,7 @@ export async function verifyEventAccess(
       organization: {
         include: {
           members: {
-            where: { userId },
+            where: { userId: auth.userId },
           },
         },
       },
@@ -97,7 +96,6 @@ export async function verifyEventAccess(
 
   const member = event.organization.members[0];
 
-  // If specific roles are required, check membership role
   if (requiredRoles && requiredRoles.length > 0) {
     if (!requiredRoles.includes(member.role as MemberRole)) {
       return { error: "Insufficient permissions", status: 403 };
@@ -105,7 +103,7 @@ export async function verifyEventAccess(
   }
 
   return {
-    userId,
+    userId: auth.userId,
     member,
     event: { organizationId: event.organizationId },
   };

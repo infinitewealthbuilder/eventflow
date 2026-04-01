@@ -1,5 +1,2 @@
-export { ConditionalClerkProvider, isClerkConfigured } from "./clerk-provider";
-
-// Server-only exports should be imported from "./org-membership" directly
-// to avoid bundling server code in client components
+// Re-export from org-membership for backward compatibility
 export type { AuthResult, AuthError, MemberRole } from "./org-membership";

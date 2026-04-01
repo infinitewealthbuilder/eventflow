@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { getAuth } from "@/lib/auth-kit/server";
 import { getStripe, SUBSCRIPTION_TIERS, type SubscriptionTierKey } from "@/lib/stripe";
 import { prisma } from "@/lib/db";
 
 export async function POST(req: Request) {
   try {
-    const { userId } = await auth();
+    const authResult = await getAuth();
+    const userId = authResult?.userId;
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
