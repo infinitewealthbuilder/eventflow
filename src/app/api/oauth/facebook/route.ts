@@ -13,6 +13,7 @@ import {
   generateOAuthState,
   buildAuthorizationUrl,
 } from '@/lib/platforms/oauth-config';
+import { canConnectPlatform } from "@/lib/stripe/subscription-service";
 
 export async function GET(request: Request) {
   try {
@@ -45,6 +46,15 @@ export async function GET(request: Request) {
     if (!membership) {
       return NextResponse.json(
         { error: 'Not authorized to manage this organization' },
+        { status: 403 }
+      );
+    }
+
+    // Check subscription limits
+    const canConnect = await canConnectPlatform(organizationId);
+    if (!canConnect) {
+      return NextResponse.json(
+        { error: 'Platform connection limit reached for your subscription tier' },
         { status: 403 }
       );
     }
