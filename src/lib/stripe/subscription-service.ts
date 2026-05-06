@@ -32,12 +32,14 @@ export async function getSubscriptionLimits(
 /**
  * Check if organization can create more events this month
  */
-export async function canCreateEvent(organizationId: string): Promise<boolean> {
+export async function canCreateEvent(
+  organizationId: string
+): Promise<{ allowed: boolean; reason?: string }> {
   const limits = await getSubscriptionLimits(organizationId);
 
   // Unlimited events
   if (limits.eventsPerMonth === -1) {
-    return true;
+    return { allowed: true };
   }
 
   // Count events created this month
@@ -52,7 +54,14 @@ export async function canCreateEvent(organizationId: string): Promise<boolean> {
     },
   });
 
-  return eventCount < limits.eventsPerMonth;
+  if (eventCount < limits.eventsPerMonth) {
+    return { allowed: true };
+  }
+
+  return {
+    allowed: false,
+    reason: `Event limit reached. Your plan allows ${limits.eventsPerMonth} events per month.`,
+  };
 }
 
 /**
@@ -60,7 +69,7 @@ export async function canCreateEvent(organizationId: string): Promise<boolean> {
  */
 export async function canConnectPlatform(
   organizationId: string
-): Promise<boolean> {
+): Promise<{ allowed: boolean; reason?: string }> {
   const limits = await getSubscriptionLimits(organizationId);
 
   // Count existing platform connections
@@ -68,7 +77,14 @@ export async function canConnectPlatform(
     where: { organizationId },
   });
 
-  return connectionCount < limits.platforms;
+  if (connectionCount < limits.platforms) {
+    return { allowed: true };
+  }
+
+  return {
+    allowed: false,
+    reason: `Platform connection limit reached. Your plan allows ${limits.platforms} platform connections.`,
+  };
 }
 
 /**

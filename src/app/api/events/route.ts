@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAuth } from "@/lib/auth-kit/server";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
+import { canCreateEvent } from "@/lib/stripe/subscription-service";
 
 // Validation schema for creating events
 const createEventSchema = z.object({
@@ -110,6 +111,12 @@ export async function POST(req: Request) {
 
     if (!member) {
       return NextResponse.json({ error: "Not a member" }, { status: 403 });
+    }
+
+    // Check subscription limits
+    const canCreate = await canCreateEvent(organizationId);
+    if (!canCreate.allowed) {
+      return NextResponse.json({ error: canCreate.reason }, { status: 403 });
     }
 
     // Create the event
