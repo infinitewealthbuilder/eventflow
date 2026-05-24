@@ -85,12 +85,21 @@ export default function ConnectionsPage() {
     fetchPlatforms();
   }, [fetchPlatforms]);
 
+  // Map platform IDs to their OAuth provider route
+  const platformOAuthProvider: Record<string, string> = {
+    facebook: 'facebook',
+    linkedin: 'linkedin',
+    'zoom-meeting': 'zoom',
+    'zoom-webinar': 'zoom',
+  };
+
   // Connect to a platform
   const handleConnect = (platformId: string) => {
     if (!organization) return;
 
     // Redirect to OAuth start endpoint
-    const oauthUrl = `/api/oauth/${platformId}?organizationId=${organization.id}`;
+    const oauthProvider = platformOAuthProvider[platformId] ?? platformId;
+    const oauthUrl = `/api/oauth/${oauthProvider}?organizationId=${organization.id}`;
     window.location.href = oauthUrl;
   };
 
@@ -106,9 +115,18 @@ export default function ConnectionsPage() {
       return;
     }
 
+    // Map platform IDs to Prisma Platform enum values (naming is inconsistent)
+    const platformEnumMap: Record<string, string> = {
+      facebook: 'FACEBOOK_EVENTS',
+      linkedin: 'LINKEDIN_EVENTS',
+      'zoom-meeting': 'ZOOM_MEETING',
+      'zoom-webinar': 'ZOOM_WEBINAR',
+    };
+    const platformEnum = platformEnumMap[platformId] ?? platformId.replace(/-/g, '_').toUpperCase();
+
     try {
       const response = await fetch(
-        `/api/platforms?organizationId=${organization.id}&platform=${platformId.toUpperCase()}_EVENTS`,
+        `/api/platforms?organizationId=${organization.id}&platform=${platformEnum}`,
         { method: 'DELETE' }
       );
 
@@ -122,7 +140,7 @@ export default function ConnectionsPage() {
   };
 
   // Get the OAuth-enabled platforms
-  const oauthPlatforms = ['facebook', 'linkedin'];
+  const oauthPlatforms = ['facebook', 'linkedin', 'zoom-meeting', 'zoom-webinar'];
 
   // Sort platforms - connected first, then OAuth-enabled
   const sortedPlatforms = [...platforms].sort((a, b) => {
