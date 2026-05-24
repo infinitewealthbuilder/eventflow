@@ -1,11 +1,6 @@
 'use client';
 
-/**
- * Billing Settings Page
- * Manage subscription tier and view usage stats
- */
-
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useOrganization } from '@/lib/hooks/use-organization';
 import { SUBSCRIPTION_TIERS } from '@/lib/stripe/config';
@@ -49,7 +44,7 @@ function UsageBar({ percentage, used, limit }: { percentage: number; used: numbe
   );
 }
 
-export default function BillingPage() {
+function BillingPage() {
   const searchParams = useSearchParams();
   const { organization } = useOrganization();
 
@@ -333,5 +328,26 @@ export default function BillingPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function BillingPageSkeleton() {
+  return (
+    <div className="p-8 max-w-4xl mx-auto space-y-4">
+      {[1, 2].map((i) => (
+        <div key={i} className="bg-white border border-gray-200 rounded-lg p-6 animate-pulse">
+          <div className="h-6 bg-gray-200 rounded w-48 mb-4" />
+          <div className="h-4 bg-gray-100 rounded w-64" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function BillingPageWrapper() {
+  return (
+    <Suspense fallback={<BillingPageSkeleton />}>
+      <BillingPage />
+    </Suspense>
   );
 }
