@@ -8,8 +8,11 @@ export function getStripe(): Stripe {
     if (!process.env.STRIPE_SECRET_KEY) {
       throw new Error("STRIPE_SECRET_KEY is not configured");
     }
+    // apiVersion intentionally omitted: the SDK uses the version it was built and
+    // type-checked against. Hardcoding a version that drifts from the installed SDK
+    // (under `stripe: ^20.x`) causes `tsc`/`next build` type errors — which is exactly
+    // what broke the 2026-05-24 production build.
     stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2025-12-15.clover",
       typescript: true,
     });
   }
