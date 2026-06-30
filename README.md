@@ -1,5 +1,9 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Sandbox
+
+This repository is the fleet's autonomous-coding sandbox. It is used for safe, low-stakes experimentation and for verifying tooling such as the Mission Control Approvals UI end-to-end.
+
 ## Getting Started
 
 First, run the development server:
