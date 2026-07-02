@@ -1,0 +1,3 @@
+# Galt code-review gate — every change requires the Galt reviewer's approved-for-prod review.
+# Backstop to the Mission Control merge gate (approvedForProd scoped to REVIEWER_GITHUB_LOGIN).
+* @galt-reviewer
